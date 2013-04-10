@@ -34,48 +34,48 @@ int main(void)
 {
    // A count variable. It must be declared volatile so that it survives any
    // optimisation used.
-	static volatile uint32_t i;
+   static volatile uint32_t i;
 
-	DDRA = 0x00; //Data direction register port A set to input 
-	DDRB = 0xFF; //Data direction register port B set to output	
+   DDRA = 0x00; //Data direction register port A set to input 
+   DDRB = 0xFF; //Data direction register port B set to output   
 
-	initISR(); // Initialize registers for both timer interrupts
-	PORTB = 0xFF; // Turn off all LEDs (active low)
+   initISR(); // Initialize registers for both timer interrupts
+   PORTB = 0xFF; // Turn off all LEDs (active low)
 
-	while(1){
-	   if(PINA & (1 << PA0))
-	   {
+   while(1){
+      if(PINA & (1 << PA0))
+      {
          // If PORTA pin 0 is pressed
-		   state = 1; // Notify ISR handlers that button is pressed
+         state = 1; // Notify ISR handlers that button is pressed
          for (i = 0; i < ACCU_COUNT/4; i++); // Delay of 500ms
-		   PORTB ^= 1<<PB4; // Toggle LED4
-		   PORTB |=  1<<PB0; // Turn off LED0
-	   }
-	   else
-	   {
+         PORTB ^= 1<<PB4; // Toggle LED4
+         PORTB |=  1<<PB0; // Turn off LED0
+      }
+      else
+      {
          // If PORTA pin 0 is not pressed
-		   state = 0; // Notify the ISR handlers that button is not pressed
+         state = 0; // Notify the ISR handlers that button is not pressed
          for (i = 0; i < ACCU_COUNT/2; i++); // Delay of 500ms
-		   PORTB ^= 1<<PB0; // Toggle LED0
-		   PORTB |= 1<<PB4; // Turn off LED4
-	   }
-	}
+         PORTB ^= 1<<PB0; // Toggle LED0
+         PORTB |= 1<<PB4; // Turn off LED4
+      }
+   }
 
-	return 0;
+   return 0;
 }
 
 ISR(TIMER0_COMPA_vect)
 {
-	if (state == 0){ // If button is not pressed
-		PORTB ^= 1<<PB2; // Toggle LED2
+   if (state == 0){ // If button is not pressed
+      PORTB ^= 1<<PB2; // Toggle LED2
       PORTB |= 1<<PB6; // Turn of LED6
    }
 }
 
 ISR(TIMER1_COMPA_vect)
 {
-	if (state == 1){ // If button is pressed
-		PORTB ^= 1<<PB6; // Toggle LED6
+   if (state == 1){ // If button is pressed
+      PORTB ^= 1<<PB6; // Toggle LED6
       PORTB |= 1<<PB2; // Turn off LED2
    }
 }
