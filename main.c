@@ -47,7 +47,7 @@ int main(void)
 	   {
          // If PORTA pin 0 is pressed
 		   state = 1; // Notify ISR handlers that button is pressed
-         for (i = 0; i < ACCU_COUNT; i++); // Delay of 500ms
+         for (i = 0; i < ACCU_COUNT/4; i++); // Delay of 500ms
 		   PORTB ^= 1<<PB4; // Toggle LED4
 		   PORTB |=  1<<PB0; // Turn off LED0
 	   }
@@ -55,7 +55,7 @@ int main(void)
 	   {
          // If PORTA pin 0 is not pressed
 		   state = 0; // Notify the ISR handlers that button is not pressed
-         for (i = 0; i < ACCU_COUNT; i++); // Delay of 500ms
+         for (i = 0; i < ACCU_COUNT/2; i++); // Delay of 500ms
 		   PORTB ^= 1<<PB0; // Toggle LED0
 		   PORTB |= 1<<PB4; // Turn off LED4
 	   }
