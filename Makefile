@@ -1,8 +1,8 @@
-/************************************************************
- * Filename: Makefile
- * Authors: Daniel Jennings, Matt Zimmerer
- * Revision log:    created 4/2/13
- ***********************************************************/
+###############################################################################
+# Filename: Makefile
+# Authors: Daniel Jennings, Matt Zimmerer
+# Revision log:    created 4/2/13
+###############################################################################
 all:
 	avr-gcc -mmcu=atmega2560 main.c -c -o main.o -O3
 	avr-gcc -mmcu=atmega2560 init.c -c -o init.o -O3
