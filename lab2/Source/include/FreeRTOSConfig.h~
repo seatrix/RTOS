@@ -81,7 +81,6 @@
 	#define configCPU_CLOCK_HZ		( ( uint32_t ) F_CPU )
 	#else
 	#define configCPU_CLOCK_HZ		( ( uint32_t ) 8000000 )
-	#endif
 //	XRAM device options. Different methods of enabling and driving.    MegaRAM only implemented for two banks of 56kByte currently.
 //	#define portMEGA_RAM											// Use the Rugged Circuits External (128kByte) MegaRAM device. - OR -
 //	#define portQUAD_RAM											// Use the Rugged Circuits External (512kByte) QuadRAM device.
