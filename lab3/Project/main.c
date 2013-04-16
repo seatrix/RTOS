@@ -16,6 +16,17 @@
 void vHdlrTask(void *tArgs);
 void vLEDTask(void *tArgs);
 
+
+static void init_isr()
+{
+   EICRA = 0x02; // INT0 falling edge triggered
+   EICRB = 0x00; // INT4-7 not configured
+   EIMSK = 0x01; // Enable INT0
+   PCICR = 0x01; // Enable pin change interrupt on INT0
+
+
+}
+
 int main( void )
 {
    DDRB = 0xFF;
@@ -33,6 +44,7 @@ int main( void )
 void vHdlrTask(void *tArgs)
 {
    for (;;) {
+      
    }
 }
 
@@ -40,4 +52,12 @@ void vLEDTask(void *tArgs)
 {
    for (;;) {
    }
+}
+
+ISR()
+{
+
+
+
+
 }
