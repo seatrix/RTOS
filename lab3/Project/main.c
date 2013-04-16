@@ -13,7 +13,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-void vHandlerTask(void *tArgs);
+void vHdlrTask(void *tArgs);
 void vLEDTask(void *tArgs);
 
 int main( void )
@@ -21,7 +21,8 @@ int main( void )
    DDRB = 0xFF;
    PORTB = 0xFF;
 
-   xTaskCreate(vTask, (const char *) "1Hz", 100, (void *) &tArgs[0], 1, NULL);
+   xTaskCreate(vHdlrTask, (const char *) "HDLR", 100, NULL, 2, NULL);
+   xTaskCreate(vLEDTask, (const char *) "LED", 100, NULL, 1, NULL);
 
    // Kick off the scheduler
    vTaskStartScheduler();
@@ -29,8 +30,14 @@ int main( void )
    return 0;
 }
 
-void vTask(void *tArgs)
+void vHdlrTask(void *tArgs)
 {
-   for (;;)  {
+   for (;;) {
+   }
+}
+
+void vLEDTask(void *tArgs)
+{
+   for (;;) {
    }
 }
