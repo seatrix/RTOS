@@ -1,5 +1,11 @@
 /*
-* TODO
+*Project: Lab3 Semaphores
+*
+*Lab 3 controls LEDs 2, 6, and 7. When SW7 is not pressed,
+*LED6 is off, LED 2 is at 2Hz and LED7 is at 7Hz. 
+*When pressed, LED6 turns on and LEDs 2 and 7 double their speeds.
+*The button used an external interrupt and the tasks are controlled using
+*semaphores unique to each task. 
 *
 *Authors: Matt Zimmerer, Daniel Jennings
 *
@@ -21,7 +27,7 @@
 #define DEBOUNCE_WAIT_MS 10
 
 #define SW7 (1 << 7)
-
+//defining our LEDs
 #define LED2 (1 << 2)
 #define LED6 (1 << 6)
 #define LED7 (1 << 7)
@@ -30,6 +36,7 @@ void vISRHdlrTask(void *tArgs);
 void vTIMHdlrTask(void *tArgs);
 void vLEDTask(void *tArgs);
 
+//The two semaphores used for the respective tasks
 xSemaphoreHandle xISRSemaphore;
 xSemaphoreHandle xTIMSemaphore;
 
@@ -53,14 +60,14 @@ static void init_timer()
 
 int main(void)
 {
-   DDRB |= LED2 | LED6 | LED7;
-   DDRE &= ~SW7;
-   PORTB |= (LED2 | LED7);
-   PORTB &= ~LED6;
+   DDRB |= LED2 | LED6 | LED7; //sets LEDs 2,6 and 7 to outputs
+   DDRE &= ~SW7; //Sets our external interrupt SW7 to the correct E pin
+   PORTB |= (LED2 | LED7); //Sets LED2 and 7 to on initially
+   PORTB &= ~LED6; //Sets LED6 to off initially
 
-   init_isr();
-   init_timer();
-   sei();
+   init_isr();//initializing ISR
+   init_timer();//initializing timer
+   sei();//enabling interrupts
 
    vSemaphoreCreateBinary(xISRSemaphore);
    vSemaphoreCreateBinary(xTIMSemaphore);
