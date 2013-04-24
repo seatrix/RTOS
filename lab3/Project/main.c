@@ -15,6 +15,9 @@
 #include "semphr.h"
 #include "task.h"
 
+#define _2HZ_HALF_PERIOD 250
+#define _4HZ_HALF_PERIOD 125
+
 #define SW7 (1 << 7)
 
 #define LED2 (1 << 2)
@@ -51,8 +54,7 @@ int main(void)
 {
    DDRB |= LED2 | LED6 | LED7;
    DDRE &= ~SW7;
-   PORTB |= (LED2 | LED6);
-   PORTB &= ~LED7;
+   PORTB |= (LED2 | LED6 | LED7);
 
    init_isr();
    init_timer();
@@ -91,9 +93,8 @@ void vTIMHdlrTask(void *tArgs)
       if (buttonState == 0) {
          
          // Only toggle LED every other timer tick
-         if (toggle ^= 0xFF) {
+         if (toggle ^= 0xFF)
             PORTB ^= LED7;
-         }
 
       // If button is not pressed
       } else {
@@ -104,8 +105,25 @@ void vTIMHdlrTask(void *tArgs)
 
 void vLEDTask(void *tArgs)
 {
+   static volatile char toggle = 0;
+
    for (;;) {
-      
+
+      // If button is pressed
+      if (buttonState == 0) {
+         
+         // Only toggle LED every other timer tick
+         if (toggle ^= 0xFF)
+            PORTB ^= LED2;
+
+         vTaskDelay(_2HZ_HALF_PERIOD / portTICK_RATE_MS);
+
+      // If button is not pressed
+      } else {
+         PORTB ^= LED2;
+
+         vTaskDelay(_4HZ_HALF_PERIOD / portTICK_RATE_MS);
+      }
    }
 }
 
