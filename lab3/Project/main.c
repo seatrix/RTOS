@@ -18,6 +18,8 @@
 #define _2HZ_HALF_PERIOD 250
 #define _4HZ_HALF_PERIOD 125
 
+#define DEBOUNCE_WAIT_MS 10
+
 #define SW7 (1 << 7)
 
 #define LED2 (1 << 2)
@@ -78,6 +80,14 @@ void vISRHdlrTask(void *tArgs)
    for (;;) {
       xSemaphoreTake(xISRSemaphore, portMAX_DELAY);
 
+      // Debouncing logic
+      vTaskDelay(DEBOUNCE_WAIT_MS / portTICK_RATE_MS);
+      if ((buttonState == 0 && (PORTE & SW7))
+             || (buttonState == 1 && !(PORTE & SW7)))
+         continue;
+
+      buttonState ^= 1;
+
       PORTB ^= LED6;
    }
 }
@@ -130,13 +140,6 @@ void vLEDTask(void *tArgs)
 ISR(INT7_vect)
 {
    static portBASE_TYPE xHPTW = pdFALSE;
-
-   // Debouncing logic
-//   _delay_ms(50);
-//   if ((buttonState == 1 && (PORTE & SW7)) || (buttonState == 0 && !(PORTE & SW7)))
-//      return;
-
-   buttonState ^= 1;
 
    xSemaphoreGiveFromISR(xISRSemaphore, &xHPTW);
 }
