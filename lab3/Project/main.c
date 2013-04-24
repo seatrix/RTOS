@@ -82,8 +82,8 @@ void vISRHdlrTask(void *tArgs)
 
       // Debouncing logic
       vTaskDelay(DEBOUNCE_WAIT_MS / portTICK_RATE_MS);
-      if ((buttonState == 0 && (PORTE & SW7))
-             || (buttonState == 1 && !(PORTE & SW7)))
+      if ((buttonState == 0 && (PINE & SW7))
+             || (buttonState == 1 && !(PINE & SW7)))
          continue;
 
       buttonState ^= 1;
