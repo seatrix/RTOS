@@ -45,11 +45,10 @@ static void init_isr()
 
 static void init_timer()
 {
-   // TODO fix comments
-   TCCR2A = 0xC0; //set timer2 to CTC mode, sets OC2A on compare match
-   TCCR2B = 0x0F; //set prescaler to divide by 256 (frequency at 31250Hz)
-   OCR2A = 0x01; //set the bottom 8 bits of output compare reg to 4
-   TIMSK2 = 0x02; //enables interrupt on compare match A
+   TCCR2A = 0xC0; // Set timer2 to CTC mode, sets OC2A on compare match
+   TCCR2B = 0x0F; // Set prescaler to divide by 1024
+   OCR2A = 162;   // Set output compare reg to 162
+   TIMSK2 = 0x02; // Enables interrupt on compare match A
 }
 
 int main(void)
@@ -148,6 +147,11 @@ ISR(INT7_vect)
 ISR(TIMER2_COMPA_vect)
 {
    static portBASE_TYPE xHPTW = pdFALSE;
+   static volatile char toggle = 0;
+
+   // At 16Mhz, we needed software support to provide an extra clock division
+   if (toggle ^= 0xFF)
+      return;
 
    xSemaphoreGiveFromISR(xTIMSemaphore, &xHPTW);
 }
