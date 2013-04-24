@@ -56,7 +56,8 @@ int main(void)
 {
    DDRB |= LED2 | LED6 | LED7;
    DDRE &= ~SW7;
-   PORTB |= (LED2 | LED6 | LED7);
+   PORTB |= (LED2 | LED7);
+   PORTB &= ~LED6;
 
    init_isr();
    init_timer();
