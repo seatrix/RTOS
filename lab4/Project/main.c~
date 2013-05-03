@@ -1,5 +1,6 @@
 /*
-* TODO
+*Project: Lab3 Semaphores
+*
 *
 *Authors: Matt Zimmerer, Daniel Jennings
 *
@@ -12,29 +13,10 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 #include "FreeRTOS.h"
-#include "semphr.h"
+//#include "semphr.h"
 #include "task.h"
 
-#define _2HZ_HALF_PERIOD 250
-#define _4HZ_HALF_PERIOD 125
-
-#define DEBOUNCE_WAIT_MS 10
-
-#define SW7 (1 << 7)
-
-#define LED2 (1 << 2)
-#define LED6 (1 << 6)
-#define LED7 (1 << 7)
-
-void vISRHdlrTask(void *tArgs);
-void vTIMHdlrTask(void *tArgs);
-void vLEDTask(void *tArgs);
-
-xSemaphoreHandle xISRSemaphore;
-xSemaphoreHandle xTIMSemaphore;
-
-// Active high buttonState mirror
-static volatile unsigned char buttonState = 1;
+void Task(void *tArgs);
 
 static void init_isr()
 {
@@ -53,100 +35,31 @@ static void init_timer()
 
 int main(void)
 {
-   DDRB |= LED2 | LED6 | LED7;
-   DDRE &= ~SW7;
-   PORTB |= (LED2 | LED7);
-   PORTB &= ~LED6;
 
-   init_isr();
-   init_timer();
-   sei();
+   //init_isr();//initializing ISR
+   //init_timer();//initializing timer
+   //sei();//enabling interrupts
 
-   vSemaphoreCreateBinary(xISRSemaphore);
-   vSemaphoreCreateBinary(xTIMSemaphore);
+   SPI_MasterInit(); 
 
-   xTaskCreate(vTIMHdlrTask, (const signed char *) "TIMHDLR", 100, NULL, 3, NULL);
-   xTaskCreate(vISRHdlrTask, (const signed char *) "ISRHDLR", 100, NULL, 2, NULL);
-   xTaskCreate(vLEDTask, (const signed char *) "LED", 100, NULL, 1, NULL);
+   //xTaskCreate(Task, (const signed char *) "TIMHDLR", 100, NULL, 3, NULL);
 
    // Kick off the scheduler
-   vTaskStartScheduler();
+   //vTaskStartScheduler();
 
    return 0;
 }
 
-void vISRHdlrTask(void *tArgs)
+void Task(void *tArgs)
 {
    for (;;) {
-      xSemaphoreTake(xISRSemaphore, portMAX_DELAY);
-
-      // Debouncing logic
-      vTaskDelay(DEBOUNCE_WAIT_MS / portTICK_RATE_MS);
-      if ((buttonState == 0 && (PINE & SW7))
-             || (buttonState == 1 && !(PINE & SW7)))
-         continue;
-
-      buttonState ^= 1;
-
-      PORTB ^= LED6;
-   }
-}
-
-void vTIMHdlrTask(void *tArgs)
-{
-   static volatile char toggle = 0;
-
-   for (;;) {
-      xSemaphoreTake(xTIMSemaphore, portMAX_DELAY);
-
-      // If button is pressed
-      if (buttonState == 0) {
-         
-         // Only toggle LED every other timer tick
-         if (toggle ^= 0xFF)
-            PORTB ^= LED7;
-
-      // If button is not pressed
-      } else {
-         PORTB ^= LED7;
-      }
-   }
-}
-
-void vLEDTask(void *tArgs)
-{
-   static volatile char toggle = 0;
-
-   for (;;) {
-
-      // If button is pressed
-      if (buttonState == 0) {
-         
-         // Only toggle LED every other timer tick
-         if (toggle ^= 0xFF)
-            PORTB ^= LED2;
-
-         vTaskDelay(_2HZ_HALF_PERIOD / portTICK_RATE_MS);
-
-      // If button is not pressed
-      } else {
-         PORTB ^= LED2;
-
-         vTaskDelay(_4HZ_HALF_PERIOD / portTICK_RATE_MS);
-      }
    }
 }
 
 ISR(INT7_vect)
 {
-   static portBASE_TYPE xHPTW = pdFALSE;
-
-   xSemaphoreGiveFromISR(xISRSemaphore, &xHPTW);
 }
 
 ISR(TIMER2_COMPA_vect)
 {
-   static portBASE_TYPE xHPTW = pdFALSE;
-
-   xSemaphoreGiveFromISR(xTIMSemaphore, &xHPTW);
 }

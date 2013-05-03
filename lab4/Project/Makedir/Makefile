@@ -28,7 +28,8 @@ C_SRCS =  \
 ../port.c \
 ../queue.c \
 ../tasks.c \
-../timers.c
+../timers.c \
+../spi_sseg.c
 
 OBJS =  \
 $(PROJNAME).o \
@@ -38,7 +39,9 @@ list.o \
 port.o \
 queue.o \
 tasks.o \
-timers.o
+timers.o \
+spi_sseg.o \
+
 
 ./%.o: .././%.c
 	avr-gcc $(CFLAGS) -o$@ $< 
