@@ -40,19 +40,19 @@ void SSEG_Write_digit(uint8_t digit, uint8_t val)
    uint8_t dig;
    switch(digit) {
 
-      case 1: 
+      case 0: 
          dig = 0x7B;
          break;
 
-      case 2: 
+      case 1: 
          dig = 0x7C;
          break;
 
-      case 3: 
+      case 2: 
          dig = 0x7D;
          break;
 
-      case 4: 
+      case 3: 
          dig = 0x7E;
          break;
 
@@ -86,5 +86,36 @@ void SSEG_Write_right_digits(uint8_t val)
 
 void SSEG_Write_Decimal_Point(uint8_t val)
 {
+   uint8_t dig;
+   switch(digit) {
 
+      case 0: 
+         dig = 0x01;
+         break;
+
+      case 1: 
+         dig = 0x03;
+         break;
+
+      case 2: 
+         dig = 0x05;
+         break;
+
+      case 3: 
+         dig = 0x08;
+         break;
+
+      case 4: 
+         dig = 0x10;
+         break;
+
+      case 5:
+         dig = 0x30;
+         break;
+
+      default:
+         break;
+   }
+   SPI_MasterTransmit(0x77);
+   SPI_MasterTransmit(dig);
 }
