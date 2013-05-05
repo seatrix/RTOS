@@ -17,9 +17,11 @@
 //-    PB5 as the MOSI output
 //-    PB7 as the clock output
 //----------------------------------------------
-#define SPI_SS     4
-#define SPI_MOSI   5
-#define SPI_SCK    7
+#define SPI_SS     0
+#define SPI_MOSI   2
+#define SPI_SCK    1
+#define SPI_DDR    DDRB
+#define SPI_PORT   PORTB
 
 // various escape code stuff for the 7-seg display
 #define SSEG_BRIGHTNESS  0x7A 
@@ -198,4 +200,20 @@ void SSEG_Write_right_digits(uint8_t val);
 //- There are six different values that can be written. Check 
 //- out the 7-segment device spec for details on decimal points.
 //---------------------------------------------------------------
-void SSEG_Write_Decimal_Point(uint8_t val); 
+void SSEG_Write_Decimal_Point(uint8_t val);
+
+
+//--------------------------------------------------------------
+//- Function: SSEG_Clear_Decimal_Point()
+//- 
+//- return value: none
+//- parameters: the individual values for the various "dots" on 
+//-             the 7-segment display. 
+//-
+//- Description: Clears decimal point values to the display. 
+//- There are six different values that can be written. Check 
+//- out the 7-segment device spec for details on decimal points.
+//---------------------------------------------------------------
+void SSEG_Clear_Decimal_Point(uint8_t val);
+
+

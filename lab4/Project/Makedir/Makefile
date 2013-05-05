@@ -5,7 +5,7 @@
 
 PROJNAME=main
 
-CFLAGS=-funsigned-char -funsigned-bitfields -O3 
+CFLAGS=-funsigned-char -funsigned-bitfields
 CFLAGS+=-fpack-struct -fshort-enums -Wall -c -std=gnu99
 CFLAGS+=-I../../Source/portable 
 CFLAGS+=-I../../Source/include 
