@@ -111,6 +111,12 @@ int main(void)
 
    return 0;
 }
+
+vApplicationTickHook()
+{
+
+}
+
 /*
 void Task(void *tArgs)
 {
