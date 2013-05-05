@@ -44,7 +44,7 @@
 #define SSEG_9     0x67
 #define SSEG_A     0x77
 #define SSEG_B     0x7C
-#define SSEG_C     0x79
+#define SSEG_C     0x39
 #define SSEG_D     0x5E
 #define SSEG_E     0x79
 #define SSEG_F     0x71

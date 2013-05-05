@@ -68,16 +68,31 @@ int main(void)
       SSEG_Write_digit(3, 7); 
       SSEG_Write_digit(4, 8);
       _delay_ms(1000);
-      SSEG_Write_digit(1, 0); 
+      SSEG_Write_digit(1, 9); 
       SSEG_Write_digit(2, 0); 
-      SSEG_Write_digit(3, 9); 
-      SSEG_Write_digit(4, 9);
+      SSEG_Write_digit(3, 10); 
+      SSEG_Write_digit(4, 11);
+      _delay_ms(1000);
+      SSEG_Write_digit(1, 12); 
+      SSEG_Write_digit(2, 13); 
+      SSEG_Write_digit(3, 14); 
+      SSEG_Write_digit(4, 15);
+      _delay_ms(1000);
+
+      SSEG_Write_digit(1, 20); 
+      SSEG_Write_digit(2, 20); 
+      SSEG_Write_digit(3, 20); 
+      SSEG_Write_digit(4, 20);
       _delay_ms(1000);
 
       SSEG_Write_left_digits(10); 
       _delay_ms(250);
       SSEG_Write_right_digits(20); 
       _delay_ms(250);
+
+      uint8_t beef[4] = {0xB,0xE,0xE,0xF};
+      SSEG_Write_4vals_array(beef);
+      _delay_ms(1000);
 
       int i;
       for (i=0;i<=6;i++) {
