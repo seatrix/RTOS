@@ -1,134 +1,121 @@
 /*
-*Project: Lab3 Semaphores
-*
-*
-*Authors: Matt Zimmerer, Daniel Jennings
-*
-*Version: Lab03 version 1.0
-*/
-#define F_CPU 8000000L
+ * Project: Lab4 SPI seven segment display, with multiple tasks
+ *
+ * Authors: Matt Zimmerer, Daniel Jennings
+ *
+ * Version: Lab04 version 1.0
+ */
 
+#define F_CPU 8000000L
 #include <stdint.h>
 #include <avr/io.h>
-//#include <avr/interrupt.h>
 #include <util/delay.h>
-//#include "FreeRTOS.h"
-//#include "semphr.h"
-//#include "task.h"
+#include "FreeRTOS.h"
+#include "semphr.h"
+#include "task.h"
 #include "spi_sseg.h"
 
-//void Task(void *tArgs);
-/*
-static void init_isr()
-{
-   EICRA = 0x00; // INT0-6 not configured
-   EICRB = 0x40; // INT7 falling edge triggered
-   EIMSK = 0x80; // Enable INT7
-}
+// LED definitions
+#define LEDDDR  DDRF
+#define LEDPORT PORTF
+#define LED0    (1<<PF0)
+#define LED2    (1<<PF2)
 
-static void init_timer()
-{
-   TCCR2A = 0xC0; // Set timer2 to CTC mode, sets OC2A on compare match
-   TCCR2B = 0x0F; // Set prescaler to divide by 1024
-   OCR2A = 162;   // Set output compare reg to 162
-   TIMSK2 = 0x02; // Enables interrupt on compare match A
-}
-*/
+typedef const signed char * cscharp;
+
+typedef struct taskJob {
+   uint16_t period;  // The period to blink the LED (square wave period)
+   uint8_t LED;      // The LED to blink
+   uint8_t dispSide; // 0 is left, 1 is right
+   uint8_t counter;  // The state transition count
+} Job;
+
+void Blink(void *tArgs);
+
+static xSemaphoreHandle rSSEG;
+
 int main(void)
 {
+   Job job5Hz = {200, LED0, 0, 0};  // LED0 Blinks at 5Hz, displays on left
+   Job job10Hz = {100, LED2, 1, 0}; // LED2 Blinks at 10Hz, displays on right
 
-   //init_isr()initializing ISR
-   //init_timer();//initializing timer
-   //sei();//enabling interrupts
-
-   uint8_t brightness = 0;
+   // Set data direction register for LEDs
+   LEDDDR = LED0 | LED2;
 
    // Initialize SSEG display
-   SPI_MasterInit();
-   SSEG_Set_Brightness(0);
-   SSEG_Reset();
+   _delay_ms(100); // Give the SSEG a grace period
+   SPI_MasterInit(); // Initialze ATMEGA spi interface
+   SSEG_Set_Brightness(0); // Set brightness to max
+   SSEG_Reset(); // Reset the SSEG device
 
-   DDRF=0xFF;
-   while (1) {
-      SSEG_Reset();
-      _delay_ms(1000);
-      PORTF=~brightness;
-      brightness++;
-      if (brightness >= 110)
-         brightness = 0;
-      SSEG_Set_Brightness(brightness);
-      SSEG_Reset();
-      SSEG_Write_digit(1, 1); 
-      SSEG_Write_digit(2, 2); 
-      SSEG_Write_digit(3, 3); 
-      SSEG_Write_digit(4, 4);
-      _delay_ms(1000);
-      SSEG_Write_digit(1, 5); 
-      SSEG_Write_digit(2, 6); 
-      SSEG_Write_digit(3, 7); 
-      SSEG_Write_digit(4, 8);
-      _delay_ms(1000);
-      SSEG_Write_digit(1, 9); 
-      SSEG_Write_digit(2, 0); 
-      SSEG_Write_digit(3, 10); 
-      SSEG_Write_digit(4, 11);
-      _delay_ms(1000);
-      SSEG_Write_digit(1, 12); 
-      SSEG_Write_digit(2, 13); 
-      SSEG_Write_digit(3, 14); 
-      SSEG_Write_digit(4, 15);
-      _delay_ms(1000);
+   // Create SSEG resource semaphore
+   vSemaphoreCreateBinary(rSSEG);
 
-      SSEG_Write_digit(1, 20); 
-      SSEG_Write_digit(2, 20); 
-      SSEG_Write_digit(3, 20); 
-      SSEG_Write_digit(4, 20);
-      _delay_ms(1000);
-
-      SSEG_Write_left_digits(10); 
-      _delay_ms(250);
-      SSEG_Write_right_digits(20); 
-      _delay_ms(250);
-
-      uint8_t beef[4] = {0xB,0xE,0xE,0xF};
-      SSEG_Write_4vals_array(beef);
-      _delay_ms(1000);
-
-      int i;
-      for (i=0;i<=6;i++) {
-         SSEG_Write_Decimal_Point(i);
-         _delay_ms(250);
-      }
-
-      for (i=0;i<=6;i++)
-         SSEG_Clear_Decimal_Point(i);
-   }
-
-   //xTaskCreate(Task, (const signed char *) "TIMHDLR", 100, NULL, 3, NULL);
+   // Creat the LED Blinky tasks
+   xTaskCreate(Blink, (cscharp) "5HZ", 100, (void*) &job5Hz, 1, NULL);
+   xTaskCreate(Blink, (cscharp) "10HZ", 100, (void*) &job10Hz, 1, NULL);
 
    // Kick off the scheduler
-   //vTaskStartScheduler();
+   vTaskStartScheduler();
 
    return 0;
 }
 
-vApplicationTickHook()
+// Tick rate is configured for 500Hz, so toggling the LED every 250th call
+// will yield 1Hz
+void vApplicationTickHook()
 {
+   // Higher priority task worken = false
+   static portBASE_TYPE xHPTW = pdFALSE;
+   static uint8_t colonState = 0;
+   static uint16_t counter = 0;
 
-}
+   // Reduce the frequency of this code
+   if (++counter == 250) {
 
-/*
-void Task(void *tArgs)
-{
-   for (;;) {
+      // Take the SSEG resource semaphore
+      xSemaphoreTakeFromISR(rSSEG, &xHPTW);
+
+      // Toggle colon state
+      if (colonState ^= 1)
+         SSEG_Write_Decimal_Point(4);
+      else
+         SSEG_Clear_Decimal_Point(4);
+
+      // Release the SSEG resource semaphore
+      xSemaphoreGiveFromISR(rSSEG, &xHPTW);
+
+      counter = 0;
    }
 }
 
-ISR(INT7_vect)
+void Blink(void *tArgs)
 {
-}
+   Job *currJob = (Job*) tArgs;
 
-ISR(TIMER2_COMPA_vect)
-{
+   for (;;) {
+
+      // Toggle target LED
+      LEDPORT ^= currJob->LED;
+
+      // Take the SSEG resources
+      xSemaphoreTake(rSSEG, portMAX_DELAY);
+
+      // Increment the state counter
+      currJob->counter++;
+      if (currJob->counter >= 100)
+         currJob->counter = 0;
+
+      // Display counter value on correct side of SSEG
+      if (currJob->dispSide == 0)
+         SSEG_Write_left_digits(currJob->counter);
+      else
+         SSEG_Write_right_digits(currJob->counter);
+      
+      // Release the SSEG resources
+      xSemaphoreGive(rSSEG);
+
+      // Delay a half period
+      vTaskDelay((currJob->period/2)/portTICK_RATE_MS);
+   }
 }
-*/

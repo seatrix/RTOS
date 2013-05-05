@@ -5,8 +5,7 @@
 
 PROJNAME=main
 
-CFLAGS=-funsigned-char -funsigned-bitfields
-CFLAGS+=-fpack-struct -fshort-enums -Wall -c -std=gnu99
+CFLAGS=-Wall -std=gnu99 -O3
 CFLAGS+=-I../Source/portable 
 CFLAGS+=-I../Source/include 
 CFLAGS+=-I../Source/MemMang  
@@ -34,7 +33,7 @@ C_SRCS =  \
 OBJS=$(C_SRCS:.c=.o)
 
 ./%.o: %.c
-	avr-gcc $(CFLAGS) -o$@ $< 
+	avr-gcc $(CFLAGS) -c -o $@ $< 
 
 all: $(PROJNAME).hex
 
