@@ -1848,7 +1848,8 @@ void vTaskSwitchContext( void )
 		}
 		#endif
 
-		taskFIRST_CHECK_FOR_STACK_OVERFLOW();
+//BB Commented out...
+//		taskFIRST_CHECK_FOR_STACK_OVERFLOW();
 		taskSECOND_CHECK_FOR_STACK_OVERFLOW();
 
 		taskSELECT_HIGHEST_PRIORITY_TASK();
