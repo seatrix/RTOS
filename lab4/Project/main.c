@@ -43,10 +43,10 @@ int main(void)
    LEDDDR = LED0 | LED2;
 
    // Initialize SSEG display
-   _delay_ms(100); // Give the SSEG a grace period
+   _delay_ms(1000); // Give the SSEG a grace period
    SPI_MasterInit(); // Initialze ATMEGA spi interface
-   SSEG_Set_Brightness(0); // Set brightness to max
    SSEG_Reset(); // Reset the SSEG device
+   SSEG_Set_Brightness(0); // Set brightness to max
 
    // Create SSEG resource semaphore
    vSemaphoreCreateBinary(rSSEG);
