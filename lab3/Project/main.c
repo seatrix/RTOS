@@ -11,7 +11,7 @@
 *
 *Version: Lab03 version 1.0
 */
-#define F_CPU 16000000L
+#define F_CPU 8000000L
 
 #include <stdint.h>
 #include <avr/io.h>
@@ -52,9 +52,9 @@ static void init_isr()
 
 static void init_timer()
 {
-   TCCR2A = 0xC0; // Set timer2 to CTC mode, sets OC2A on compare match
+   TCCR2A = 0xC2; // Set timer2 to CTC mode, sets OC2A on compare match
    TCCR2B = 0x0F; // Set prescaler to divide by 1024
-   OCR2A = 162;   // Set output compare reg to 162
+   OCR2A = 138;   // Set output compare reg to 138 (determined experimentally)
    TIMSK2 = 0x02; // Enables interrupt on compare match A
 }
 
@@ -107,7 +107,7 @@ void vTIMHdlrTask(void *tArgs)
       xSemaphoreTake(xTIMSemaphore, portMAX_DELAY);
 
       // If button is pressed
-      if (buttonState == 0) {
+      if (buttonState == 1) {
          
          // Only toggle LED every other timer tick
          if (toggle ^= 0xFF)
@@ -122,23 +122,18 @@ void vTIMHdlrTask(void *tArgs)
 
 void vLEDTask(void *tArgs)
 {
-   static volatile char toggle = 0;
-
    for (;;) {
 
       // If button is pressed
-      if (buttonState == 0) {
+      if (buttonState == 1) {
          
-         // Only toggle LED every other timer tick
-         if (toggle ^= 0xFF)
-            PORTB ^= LED2;
-
+         PORTB ^= LED2;
          vTaskDelay(_2HZ_HALF_PERIOD / portTICK_RATE_MS);
 
       // If button is not pressed
       } else {
-         PORTB ^= LED2;
 
+         PORTB ^= LED2;
          vTaskDelay(_4HZ_HALF_PERIOD / portTICK_RATE_MS);
       }
    }
@@ -156,7 +151,7 @@ ISR(TIMER2_COMPA_vect)
    static portBASE_TYPE xHPTW = pdFALSE;
    static volatile char toggle = 0;
 
-   // At 16Mhz, we needed software support to provide an extra clock division
+   // We needed software support to provide an extra clock division
    if (toggle ^= 0xFF)
       return;
 
