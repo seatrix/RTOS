@@ -126,9 +126,34 @@ void inputTask(void *vParam) {
      * ship.accel stores if the ship is moving
      * ship.a_vel stores which direction the ship is moving in
      */
+   //I don't think this is right, need to check this.
+   while (1)
+   {//if the 
+      if(PINB != 0xFF)
+      {
+         if(!LEFT_BUTTON && RIGHT_BUTTON)
+         {
+            //make ship turn left 
+            ship.angle -= 1; 
+         } 
 
-    while (1)
-        ;
+         if(!RIGHT_BUTTON && LEFT_BUTTON)
+         {
+            //make ship turn right
+            ship.angle += 1;
+         }  
+           
+         if(!ACCEL_BUTTON && )
+         {
+            //make ship accelerate
+            ship.accel += SHIP_ACCEL;
+         }
+         //if not accelerating, slow down
+         else ship.accel -= SHIP_ACCEL;  
+     
+      }
+
+   }
 }
 
 /*------------------------------------------------------------------------------
@@ -151,7 +176,18 @@ void bulletTask(void *vParam) {
      */
 
     while (1)
-        ;
+    {
+      if(SHOOT_BUTTON == 0)
+         {  //creates a bullet at the ship position travelling at BULLET_VEL
+            //(might need to change to the tip of the ship?)
+            bullets = createBullet(ship.pos.x, ship.pos.y, BULLET_VEL, BULLET_VEL, bullets);
+            //if bullet shot, delay this task 10 ms
+            vTaskDelay(500/ portTICK_RATE_MS);
+         } 
+      //if bullet not shot delay for the FRAME_DELAY_MS
+      else vTaskDelay(FRAME_DELAY_MS/portTICK_RATE_MS);
+     }   
+  
 }
 
 /*------------------------------------------------------------------------------
@@ -446,6 +482,7 @@ void reset(void) {
      *		thisObject = nextObject
      *	}
      */
+     
 }
 
 /*------------------------------------------------------------------------------
@@ -535,6 +572,8 @@ object *createBullet(float x, float y, float velx, float vely, object *nxt) {
      bullet->next = nxt;
      * Create a new sprite using xSpriteCreate()
      */
+      pvPortMalloc()
+      
 }
 
 /*------------------------------------------------------------------------------
