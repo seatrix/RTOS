@@ -143,11 +143,11 @@ void inputTask(void *vParam) {
             ship.angle += 1;
          }  
            
-         if(!ACCEL_BUTTON && )
-         {
+//         if(!ACCEL_BUTTON && ) // TODO uncomment and use correct button def
+//         {
             //make ship accelerate
-            ship.accel += SHIP_ACCEL;
-         }
+//            ship.accel += SHIP_ACCEL;
+//         }
          //if not accelerating, slow down
          else ship.accel -= SHIP_ACCEL;  
      
@@ -412,7 +412,7 @@ int main(void) {
 	xTaskCreate(bulletTask, (signed char *) "b", 130, NULL, 2, &bulletTaskHandle);
 	xTaskCreate(updateTask, (signed char *) "u", 200, NULL, 4, &updateTaskHandle);
 	xTaskCreate(drawTask, (signed char *) "d", 230, NULL, 3, NULL);
-	xTaskCreate(USART_Write_Task, (signed char *) "w", 150, NULL, 5, NULL);
+//	xTaskCreate(USART_Write_Task, (signed char *) "w", 150, NULL, 5, NULL); TODO create usar write task
 	
 	vTaskStartScheduler();
 	
@@ -526,6 +526,8 @@ object *createAsteroid(float x, float y, float velx, float vely, int16_t angle, 
      * Add new asteroid to the group "astGroup" using:
      *	vGroupAddSprite() 
      */
+
+   return NULL;
 }
 
 /*------------------------------------------------------------------------------
@@ -572,8 +574,9 @@ object *createBullet(float x, float y, float velx, float vely, object *nxt) {
      bullet->next = nxt;
      * Create a new sprite using xSpriteCreate()
      */
-      pvPortMalloc()
+//      pvPortMalloc()
       
+   return NULL;
 }
 
 /*------------------------------------------------------------------------------
