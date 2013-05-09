@@ -3,7 +3,7 @@
 # Revision log:
 ###############################################################################
 
-PROJNAME=main
+PROJNAME=asteroids
 
 CFLAGS=-Wall -std=gnu99 -O3
 CFLAGS+=-I../Source/portable 
@@ -22,13 +22,14 @@ HEXFLAGS=-O ihex -R .eeprom -R .fuse -R .lock -R .signature
 C_SRCS =  \
    $(PROJNAME).c \
    croutine.c \
-   heap_1.c \
+   heap_2.c \
    list.c \
    port.c \
    queue.c \
    tasks.c \
    timers.c \
-   spi_sseg.c
+   graphics.c \
+   usart.c
 
 OBJS=$(C_SRCS:.c=.o)
 
