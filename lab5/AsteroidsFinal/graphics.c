@@ -98,9 +98,7 @@ xSpriteHandle xSpriteCreate(const char *filename, uint16_t xPos, uint16_t yPos,
 	USART_Write(height & 0x00FF);
 	USART_Write(depth);
 	
-	PORTA = 0xAA;
 	xSpriteHandle result = (xSpriteHandle)USART_Read();
-	PORTA = 0xFF;
 	
 	return result;
 }
