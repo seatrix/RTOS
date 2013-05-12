@@ -723,13 +723,13 @@ void spawnAsteroid(point *pos, uint8_t size) {
       avel = (((rand() % 100) * maxavel/2) / 100.0) - maxavel/2;
 
       asteroids = createAsteroid(pos->x,
-                                    pos->y,
-                                    velx,
-                                    vely,
-                                    angle,
-                                    avel,
-                                    size - 1,
-                                    asteroids);
+                              pos->y,
+                              (rand() % (int8_t)(maxVel * 10)) / 5.0 - maxVel,
+                              (rand() % (int8_t)(maxVel * 10)) / 5.0 - maxVel,
+                              rand() % 360,
+                              (rand() % (int8_t)(maxavel * 10)) / 5.0 - maxavel,
+                              size - 1,
+                              asteroids);
    }
    xSemaphoreGive(asteroidMutex);
 }
