@@ -667,8 +667,8 @@ object *createBullet(float x, float y, float velx, float vely, object *nxt) {
                                           newBullet->pos.x,
                                           newBullet->pos.y,
                                           newBullet->angle,
-                                          16,
-                                          16,
+                                          BULLET_SIZE,
+                                          BULLET_SIZE,
                                           1);
 
    // Insert into bullet list
