@@ -45,7 +45,7 @@ int main(void)
 
    xTaskCreate(UARTTask, (const signed char *) "uart", 100, NULL, 1, NULL);
    xTaskCreate(WiflyTask, (const signed char *) "wifly", 100, NULL, 2, NULL);
-   //xTaskCreate(ReceiveTask, (const signed char *) "receive", 100, NULL, 2, NULL);
+   xTaskCreate(ReceiveTask, (const signed char *) "receive", 100, NULL, 2, NULL);
    vTaskStartScheduler();
 
    return 0;
