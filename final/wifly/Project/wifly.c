@@ -25,14 +25,15 @@
 #define CMDMODE   1 // Enter command mode
 #define UARTNE    2 // Disable UART rx echo
 #define DHCPC     3 // Enable DHCP
-#define JWAIT     4 // Extend join wait to 5000ms
-#define AUTH      5 // Set auth to mixed wpa1-wpa2psk
-#define SETPW     6 // Set password (hardcoded)
-#define SETSSID   7 // Set SSID (hardcoded)
-#define HIDEKEY   8 // Hide password
-#define AUTOJOIN  9 // Set wifly to autojoin
-#define DATMODE   10 // Exit command mode
-#define FLUSH     11 // Pre idle mode flush
+#define QUIET     4 // Disable verbose wifly output
+#define JWAIT     5 // Extend join wait to 5000ms
+#define AUTH      6 // Set auth to mixed wpa1-wpa2psk
+#define SETPW     7 // Set password (hardcoded)
+#define SETSSID   8 // Set SSID (hardcoded)
+#define HIDEKEY   9 // Hide password
+#define AUTOJOIN  10 // Set wifly to autojoin
+#define DATMODE   11 // Exit command mode
+#define FLUSH     12 // Pre idle mode flush
 #define IDLE      127 // Do nothing
 
 // Wifly pinout defines
@@ -54,6 +55,7 @@
 #define STR_INVSTATE        "wifly - State not found\r\n"
 #define STR_CMDMODE         "wifly - Command mode\r\n"
 #define STR_UARTNE          "wifly - Disabling uart rx echo\r\n"
+#define STR_QUIET           "wifly - Quiet mode enabled\r\n"
 #define STR_DHCPC           "wifly - Enable DHCP\r\n"
 #define STR_JWAIT           "wifly - Setting join wait to 5000ms\r\n"
 #define STR_AUTH            "wifly - Setting auth to WPA1-WPA2psk\r\n"
@@ -79,7 +81,8 @@ static struct wifly_state {
    int16_t rxdelay;    // Delay (ms) to observe before reading rx cmd
 } state_table[] = {
    {CMDMODE,UARTNE,CMDMODE,SF_STARTFLAGS,"$$$",0,"CMD\r\n",500},
-   {UARTNE,DHCPC,CMDMODE,SF_NONE,"set u m 1\r",0,"set u m 1\r\r\nAOK\r\n",50},
+   {UARTNE,QUIET,CMDMODE,SF_NONE,"set u m 1\r",0,"set u m 1\r\r\nAOK\r\n",50},
+   {QUIET,DHCPC,CMDMODE,SF_NONE,"set s p 0\r",0,"AOK\r\n",50},
    {DHCPC,JWAIT,CMDMODE,SF_NONE,"set i d 1\r",0,"AOK\r\n",50},
    {JWAIT,AUTH,CMDMODE,SF_NONE,"set o j 5000\r",0,"AOK\r\n",50},
    {AUTH,SETPW,CMDMODE,SF_NONE,"set w a 4\r",0,"AOK\r\n",50},
@@ -197,6 +200,8 @@ void wifly_check_state(struct wifly *wf)
       case CMDMODE: writeBytes(STR_CMDMODE, strlen(STR_CMDMODE), USART0);
          break;
       case UARTNE: writeBytes(STR_UARTNE, strlen(STR_UARTNE), USART0);
+         break;
+      case QUIET: writeBytes(STR_QUIET, strlen(STR_QUIET), USART0);
          break;
       case DHCPC: writeBytes(STR_DHCPC, strlen(STR_DHCPC), USART0);
          break;
