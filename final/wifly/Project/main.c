@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <avr/io.h>
+#include <string.h>
 #include "FreeRTOS.h"
 #include "semphr.h"
 #include "task.h"
@@ -28,12 +29,31 @@ void WiflyTask(void *args)
 void ReceiveTask(void *args)
 {
    int cnt;
-   char buff[4];
+   char buff[128];
 
    while (1) {
-      if (0 < (cnt = wifly_receive(&wf, &buff, 4))) {
-         writeBytes(buff, cnt, 0);
+
+      // Receive command type bytes
+      if (3 == (cnt = wifly_receive(&wf, buff, 3))) {
+         writeBytes(">>>", 3, USART0);
+         writeBytes(buff, 3, USART0);
+         writeBytes("\r\n", 2, USART0);
+         
+         // Color change command
+         if (!strncmp(buff, "COL", 3)) {
+            if (6 == (cnt = wifly_receive(&wf, buff, 6))) {
+               writeBytes("$COLOR=", 7, USART0);
+               writeBytes(buff, cnt, USART0);
+               writeBytes("\r\n", 2, USART0);
+            }
+            
+         // Toggle display command
+         } else if (!strncmp(buff, "TOG", 3)) {
+            writeBytes("$TOGGLE\r\n", 9, USART0);
+         }
       }
+
+      wifly_flush(&wf);
    }
 }
 
@@ -45,7 +65,7 @@ int main(void)
 
    xTaskCreate(UARTTask, (const signed char *) "uart", 100, NULL, 1, NULL);
    xTaskCreate(WiflyTask, (const signed char *) "wifly", 100, NULL, 2, NULL);
-   xTaskCreate(ReceiveTask, (const signed char *) "receive", 100, NULL, 2, NULL);
+   xTaskCreate(ReceiveTask, (const signed char *) "receive", 200, NULL, 2, NULL);
    vTaskStartScheduler();
 
    return 0;

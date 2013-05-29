@@ -24,16 +24,18 @@
 // State enumerations
 #define CMDMODE   1 // Enter command mode
 #define UARTNE    2 // Disable UART rx echo
-#define DHCPC     3 // Enable DHCP
-#define QUIET     4 // Disable verbose wifly output
-#define JWAIT     5 // Extend join wait to 5000ms
-#define AUTH      6 // Set auth to mixed wpa1-wpa2psk
-#define SETPW     7 // Set password (hardcoded)
-#define SETSSID   8 // Set SSID (hardcoded)
-#define HIDEKEY   9 // Hide password
-#define AUTOJOIN  10 // Set wifly to autojoin
-#define DATMODE   11 // Exit command mode
-#define FLUSH     12 // Pre idle mode flush
+#define UDP       3 // Enable UDP protocol
+#define AUTOPAIR  4 // Enable UDP autopairing
+#define DHCPC     5 // Enable DHCP
+#define QUIET     6 // Disable verbose wifly output
+#define JWAIT     7 // Extend join wait to 5000ms
+#define AUTH      8 // Set auth to mixed wpa1-wpa2psk
+#define SETPW     9 // Set password (hardcoded)
+#define SETSSID   10 // Set SSID (hardcoded)
+#define HIDEKEY   11 // Hide password
+#define AUTOJOIN  12 // Set wifly to autojoin
+#define DATMODE   13 // Exit command mode
+#define FLUSH     14 // Pre idle mode flush
 #define IDLE      127 // Do nothing
 
 // Wifly pinout defines
@@ -57,12 +59,14 @@
 #define STR_UARTNE          "wifly - Disabling uart rx echo\r\n"
 #define STR_QUIET           "wifly - Quiet mode enabled\r\n"
 #define STR_DHCPC           "wifly - Enable DHCP\r\n"
+#define STR_UDP             "wifly - Enabling UDP protocol\r\n"
+#define STR_AUTOPAIR        "wifly - Enabling UDP autopairing\r\n"
 #define STR_JWAIT           "wifly - Setting join wait to 5000ms\r\n"
 #define STR_AUTH            "wifly - Setting auth to WPA1-WPA2psk\r\n"
 #define STR_SETPW           "wifly - Setting password\r\n"
 #define STR_SETSSID         "wifly - Setting SSID to "SSID"\r\n"
 #define STR_HIDEKEY         "wifly - Hiding passphrase\r\n"
-#define STR_AUTOJOIN        "wifly - Auto joining\r\n"
+#define STR_AUTOJOIN        "wifly - Setting auto join\r\n"
 #define STR_DATMODE         "wifly - Data mode entered\r\n"
 #define STR_FLUSH           "wifly - Flushing received bytes\r\n"
 #define STR_IDLE            "wifly - Idling with rx/tx enabled\r\n"
@@ -83,7 +87,9 @@ static struct wifly_state {
    {CMDMODE,UARTNE,CMDMODE,SF_STARTFLAGS,"$$$",0,"CMD\r\n",500},
    {UARTNE,QUIET,CMDMODE,SF_NONE,"set u m 1\r",0,"set u m 1\r\r\nAOK\r\n",50},
    {QUIET,DHCPC,CMDMODE,SF_NONE,"set s p 0\r",0,"AOK\r\n",50},
-   {DHCPC,JWAIT,CMDMODE,SF_NONE,"set i d 1\r",0,"AOK\r\n",50},
+   {DHCPC,UDP,CMDMODE,SF_NONE,"set i d 1\r",0,"AOK\r\n",50},
+   {UDP,AUTOPAIR,CMDMODE,SF_NONE,"set i p 1\r",0,"AOK\r\n",50},
+   {AUTOPAIR,JWAIT,CMDMODE,SF_NONE,"set i f 0x47\r",0,"AOK\r\n",50},
    {JWAIT,AUTH,CMDMODE,SF_NONE,"set o j 5000\r",0,"AOK\r\n",50},
    {AUTH,SETPW,CMDMODE,SF_NONE,"set w a 4\r",0,"AOK\r\n",50},
    {SETPW,SETSSID,CMDMODE,SF_NONE,"set w p "PW"\r",0,"AOK\r\n",750},
@@ -205,6 +211,10 @@ void wifly_check_state(struct wifly *wf)
          break;
       case DHCPC: writeBytes(STR_DHCPC, strlen(STR_DHCPC), USART0);
          break;
+      case UDP: writeBytes(STR_UDP, strlen(STR_UDP), USART0);
+         break;
+      case AUTOPAIR: writeBytes(STR_AUTOPAIR, strlen(STR_AUTOPAIR), USART0);
+         break;
       case JWAIT: writeBytes(STR_JWAIT, strlen(STR_JWAIT), USART0);
          break;
       case AUTH: writeBytes(STR_AUTH, strlen(STR_AUTH), USART0);
@@ -296,4 +306,16 @@ int wifly_receive(struct wifly *wf, char *dst, uint16_t bytes)
    xSemaphoreGive(uartSem);
 
    return bytes;
+}
+
+void wifly_flush(struct wifly *wf)
+{
+   if (!wf->rxtx_enabled) {
+      vTaskDelay(RX_DELAY / portTICK_RATE_MS);
+      return -1;
+   }
+
+   xSemaphoreTake(uartSem, portMAX_DELAY);
+   flushSerial(WF_USART);
+   xSemaphoreGive(uartSem);
 }

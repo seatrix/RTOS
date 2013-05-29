@@ -28,4 +28,6 @@ int wifly_transmit(struct wifly *wf, char *src, uint16_t bytes);
 
 int wifly_receive(struct wifly *wf, char *dst, uint16_t bytes);
 
+void wifly_flush(struct wifly *wf);
+
 #endif
