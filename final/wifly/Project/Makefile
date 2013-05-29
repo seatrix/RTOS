@@ -5,7 +5,7 @@
 
 PROJNAME=main
 
-CFLAGS=-Wall -std=gnu99
+CFLAGS=-Wall -std=gnu99 -Os
 CFLAGS+=-I../Source/portable 
 CFLAGS+=-I../Source/include 
 CFLAGS+=-I../Source/MemMang  
