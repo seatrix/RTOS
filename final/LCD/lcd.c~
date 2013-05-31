@@ -17,8 +17,8 @@ void setupLCD()
    _delay_ms(200);
 
    //set RW and RS and E to 0
-   LCD_CTRL_PORT = LCD_CTRL_PORT & ~RS_MASK; 
-   LCD_CTRL_PORT = LCD_CTRL_PORT & ~RW_MASK;
+   LCD_CTRL_PORT &= ~RS_MASK; 
+   LCD_CTRL_PORT |= E_MASK;
    
    //set 8-bit mode
    functionSet(1,1,1);
@@ -49,6 +49,8 @@ void setupLCD()
  */
 void clearDisplay()
 {
+   LCD_CTRL_PORT &= ~RS_MASK; 
+
    //clear display
    writeRAM(0x01);
    //set cursor to first spot
@@ -60,6 +62,8 @@ void clearDisplay()
  */
 void cursorHome()
 {
+   LCD_CTRL_PORT &= ~RS_MASK; 
+
    //set cursor to first spot
    writeRAM(0x02);
 }
@@ -72,6 +76,9 @@ void cursorHome()
  */
 void entryModeSet(uint8_t incCursor, uint8_t shiftDisp)
 {
+
+   LCD_CTRL_PORT &= ~RS_MASK; 
+
    //automatically just sends command for entrymode set
    uint8_t entryMode = 0x04;
    
@@ -102,6 +109,8 @@ void displayOnOff(uint8_t dispOn, uint8_t cursOn, uint8_t cursBlink)
 {
 
    uint8_t dispOnOff = 0x08;
+
+   LCD_CTRL_PORT &= ~RS_MASK; 
 
    //display on or off
    if(dispOn == 1)
@@ -134,6 +143,8 @@ void displayOnOff(uint8_t dispOn, uint8_t cursOn, uint8_t cursBlink)
  */
 void cursorDisplayShift(uint8_t shiftDisp, uint8_t shiftRight)
 {
+   LCD_CTRL_PORT &= ~RS_MASK; 
+
    uint8_t cursorDispShift = 0x10;
 
    if(shiftDisp==1)
@@ -160,6 +171,8 @@ void cursorDisplayShift(uint8_t shiftDisp, uint8_t shiftRight)
  */
 void functionSet(uint8_t bytemode, uint8_t twolines, uint8_t font)
 {
+   LCD_CTRL_PORT &= ~RS_MASK; 
+   
    uint8_t function = 0x40;
 
    if(byteMode == 1)
@@ -181,7 +194,8 @@ void functionSet(uint8_t bytemode, uint8_t twolines, uint8_t font)
  */
 void setCGRAMaddr(uint8_t address)
 {
-   LCD_CTRL_PORT = (LCD_CTRL_PORT | RW_MASK); 
+   LCD_CTRL_PORT |= RS_MASK;    
+
    writeRAM(0x40 | address);
 }
 
@@ -192,6 +206,8 @@ void setCGRAMaddr(uint8_t address)
  */
 void setDDRAMaddr(uint8_t address)
 {
+   LCD_CTRL_PORT &= ~RS_MASK; 
+
    writeRAM(0x80 | address);
 }
 
@@ -202,12 +218,15 @@ void setDDRAMaddr(uint8_t address)
  * @param data data to write to ram
  */
 void writeRAM(uint8_t data)
-{
-   //set RW
-   LCD_CTRL_PORT = LCD_CTRL_PORT | W_MASK;
+{   
 
    //write data to the data port
    LCD_DAT_PORT = data; 
+
+   //set RW
+   LCD_CTRL_PORT &= ~E_MASK;
+
+   LCD_CTRL_PORT |= E_MASK;
    
 }
 
