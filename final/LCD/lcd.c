@@ -4,9 +4,12 @@
  * @author Daniel Jennings
  */
 
-#include <lcd.h>
+#include <avr/io.h>
+#include <util/delay.h>
+#include <stdio.h>
 #include <stdint.h>
 #include <stdarg.h>
+#include "lcd.h"
 
 /*
  * @brief sets up the interface to LCD, and enters initial commands
@@ -128,7 +131,7 @@ void displayOnOff(uint8_t dispOn, uint8_t cursOn, uint8_t cursBlink)
    if(cursBlink)
    {
       //set blink to on
-      dispOnOff = (dispOnOff |= 0x01);
+      dispOnOff = (dispOnOff | 0x01);
    }     
 
    writeRAM(dispOnOff); 
@@ -175,7 +178,7 @@ void functionSet(uint8_t bytemode, uint8_t twolines, uint8_t font)
    
    uint8_t function = 0x40;
 
-   if(byteMode == 1)
+   if (bytemode == 1)
       //set 8-bit mode
       function = (function | 0x1D);
    
@@ -239,13 +242,14 @@ void writeRAM(uint8_t data)
  */
 void lcdprintf(uint8_t line, const char *fmt, ...)
 {
+/*
    char tmp[128]; //limits length of string
    va_list args;
    va_start(args, fmt);
    vsnprintf(tmp, 128, fmt, args);
    va_end(args);
    Serial.print(tmp);
-
+*/
 }
 
 
