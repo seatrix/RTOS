@@ -16,15 +16,18 @@
  */
 void setupLCD()
 {
-   //give it time before turning on
-   _delay_ms(200);
+   LCD_CRTL_DDR = 0x03;
+   LCD_DAT_DDR = 0xFF;
 
    //set RW and RS and E to 0
    LCD_CTRL_PORT &= ~RS_MASK; 
-   LCD_CTRL_PORT |= E_MASK;
+   LCD_CTRL_PORT |= E_MASK;   
+
+   //give it time before turning on
+   _delay_ms(200);
    
    //set 8-bit mode
-   functionSet(1,1,1);
+   functionSet(1,1,0);
    //delay for this command
    _delay_ms(40);
 
@@ -42,8 +45,6 @@ void setupLCD()
    displayOnOff(1,1,1);
    //delay for this command
    _delay_ms(40);
-
-
 }
 
 
@@ -56,8 +57,6 @@ void clearDisplay()
 
    //clear display
    writeRAM(0x01);
-   //set cursor to first spot
-   cursorHome();
 }
 
 /*
@@ -79,7 +78,6 @@ void cursorHome()
  */
 void entryModeSet(uint8_t incCursor, uint8_t shiftDisp)
 {
-
    LCD_CTRL_PORT &= ~RS_MASK; 
 
    //automatically just sends command for entrymode set
@@ -97,7 +95,6 @@ void entryModeSet(uint8_t incCursor, uint8_t shiftDisp)
    }
    
    writeRAM(entryMode);
- 
    
 }
 
@@ -176,15 +173,16 @@ void functionSet(uint8_t bytemode, uint8_t twolines, uint8_t font)
 {
    LCD_CTRL_PORT &= ~RS_MASK; 
    
-   uint8_t function = 0x40;
+   uint8_t function = 0x20;
 
-   if (bytemode == 1)
-      //set 8-bit mode
-      function = (function | 0x1D);
-   
-   else 
-      //set to 4-bit mode
-      function = (function | 0x0D);
+   if (bytemode)
+      function |= 0x10;
+
+   if (twolines)
+      function |= 0x08;
+
+   if (font)
+      function |= 0x04;
    
    writeRAM(function);
       
@@ -225,12 +223,12 @@ void writeRAM(uint8_t data)
 
    //write data to the data port
    LCD_DAT_PORT = data; 
+   _delay_ms(1);
 
    //set RW
    LCD_CTRL_PORT &= ~E_MASK;
-
+   _delay_ms(1);
    LCD_CTRL_PORT |= E_MASK;
-   
 }
 
 /*
@@ -251,5 +249,3 @@ void lcdprintf(uint8_t line, const char *fmt, ...)
    Serial.print(tmp);
 */
 }
-
-
