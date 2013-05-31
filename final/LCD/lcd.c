@@ -18,7 +18,7 @@ void setupLCD()
 
    //set RW and RS and E to 0
    LCD_CTRL_PORT = LCD_CTRL_PORT & ~RS_MASK; 
-   LCD_CTRL_PORT = LCD_CTRL_PORT & ~RW_MASK;
+   LCD_CTRL_PORT = LCD_CTRL_PORT & ~E_MASK;
    
    //set 8-bit mode
    functionSet(1,1,1);
