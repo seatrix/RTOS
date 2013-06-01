@@ -11,13 +11,30 @@
 #include <stdarg.h>
 #include "lcd.h"
 
+void __writeLCD(uint8_t data)
+{
+   //write data to the data port
+   LCD_DAT_PORT = data; 
+
+   //set RW
+   LCD_CTRL_PORT &= ~E_MASK;
+   _delay_ms(1);
+   LCD_CTRL_PORT |= E_MASK;
+}
+
+static void __writeString(char *string)
+{
+   while (*string != '\0')
+      writeRAM(*string++);
+}
+
 /*
  * @brief sets up the interface to LCD, and enters initial commands
  */
 void setupLCD()
 {
-   LCD_CRTL_DDR = 0x03;
-   LCD_DAT_DDR = 0xFF;
+   LCD_CRTL_DDR |= 0x03;
+   LCD_DAT_DDR |= 0xFF;
 
    //set RW and RS and E to 0
    LCD_CTRL_PORT &= ~RS_MASK; 
@@ -26,27 +43,11 @@ void setupLCD()
    //give it time before turning on
    _delay_ms(200);
    
-   //set 8-bit mode
    functionSet(1,1,0);
-   //delay for this command
-   _delay_ms(40);
-
-   //set the direction of cursor
    entryModeSet(1,0);
-   //delay for this command
-   _delay_ms(40); 
-
-   //clear display
    clearDisplay();
-   //delay for this command
-   _delay_ms(2); 
-
-   //set display on, cursor on, blinking on
    displayOnOff(1,1,1);
-   //delay for this command
-   _delay_ms(40);
 }
-
 
 /*
  * @brief commands the LCD to clear display
@@ -56,7 +57,9 @@ void clearDisplay()
    LCD_CTRL_PORT &= ~RS_MASK; 
 
    //clear display
-   writeRAM(0x01);
+   __writeLCD(0x01);
+
+   _delay_ms(2); 
 }
 
 /*
@@ -67,7 +70,9 @@ void cursorHome()
    LCD_CTRL_PORT &= ~RS_MASK; 
 
    //set cursor to first spot
-   writeRAM(0x02);
+   __writeLCD(0x02);
+
+   _delay_ms(2); 
 }
 
 /*
@@ -84,18 +89,16 @@ void entryModeSet(uint8_t incCursor, uint8_t shiftDisp)
    uint8_t entryMode = 0x04;
    
    //or with a mask of 00000010 to set cursor increment on
-   if(incCursor == 1) 
-   {
+   if(incCursor) 
       entryMode = (entryMode | 0x02);
-   }
+
    //or with mask of 00000001 to set shift on
-   if(shiftDisp == 1)
-   {
+   if(shiftDisp)
       entryMode = (entryMode | 0x01);
-   }
    
-   writeRAM(entryMode);
-   
+   __writeLCD(entryMode);
+
+   _delay_ms(1);    
 }
 
 /*
@@ -112,27 +115,18 @@ void displayOnOff(uint8_t dispOn, uint8_t cursOn, uint8_t cursBlink)
 
    LCD_CTRL_PORT &= ~RS_MASK; 
 
-   //display on or off
-   if(dispOn == 1)
-   {
-      //set display to on
+   if(dispOn)
       dispOnOff = (dispOnOff | 0x04);
-   }
 
    if(cursOn)
-   {
-      //set cursor to on
       dispOnOff = (dispOnOff | 0x02);
-   } 
 
    if(cursBlink)
-   {
-      //set blink to on
       dispOnOff = (dispOnOff | 0x01);
-   }     
 
-   writeRAM(dispOnOff); 
+   __writeLCD(dispOnOff); 
    
+   _delay_ms(1); 
 }
 
 /*
@@ -147,19 +141,15 @@ void cursorDisplayShift(uint8_t shiftDisp, uint8_t shiftRight)
 
    uint8_t cursorDispShift = 0x10;
 
-   if(shiftDisp==1)
-   {
-      //shift display
+   if(shiftDisp)
       cursorDispShift = (cursorDispShift | 0x08);
-   } 
 
-   if(shiftDisp==1)
-   {
-      //shift right
+   if(shiftRight)
       cursorDispShift = (cursorDispShift | 0x04);
-   }  
    
-   writeRAM(cursorDispShift);
+   __writeLCD(cursorDispShift);
+
+   _delay_ms(1); 
 }
 
 /*
@@ -184,8 +174,9 @@ void functionSet(uint8_t bytemode, uint8_t twolines, uint8_t font)
    if (font)
       function |= 0x04;
    
-   writeRAM(function);
+   __writeLCD(function);
       
+   _delay_ms(1); 
 }
 
 /*
@@ -195,9 +186,11 @@ void functionSet(uint8_t bytemode, uint8_t twolines, uint8_t font)
  */
 void setCGRAMaddr(uint8_t address)
 {
-   LCD_CTRL_PORT |= RS_MASK;    
+   LCD_CTRL_PORT &= ~RS_MASK;
 
-   writeRAM(0x40 | address);
+   __writeLCD(0x40 | address);
+
+   _delay_ms(1); 
 }
 
 /*
@@ -209,7 +202,9 @@ void setDDRAMaddr(uint8_t address)
 {
    LCD_CTRL_PORT &= ~RS_MASK; 
 
-   writeRAM(0x80 | address);
+   __writeLCD(0x80 | address);
+
+   _delay_ms(1); 
 }
 
 /*
@@ -219,16 +214,12 @@ void setDDRAMaddr(uint8_t address)
  * @param data data to write to ram
  */
 void writeRAM(uint8_t data)
-{   
+{
+   LCD_CTRL_PORT |= RS_MASK; 
 
-   //write data to the data port
-   LCD_DAT_PORT = data; 
-   _delay_ms(1);
+   __writeLCD(data);
 
-   //set RW
-   LCD_CTRL_PORT &= ~E_MASK;
-   _delay_ms(1);
-   LCD_CTRL_PORT |= E_MASK;
+   _delay_ms(1); 
 }
 
 /*
@@ -240,12 +231,18 @@ void writeRAM(uint8_t data)
  */
 void lcdprintf(uint8_t line, const char *fmt, ...)
 {
-/*
-   char tmp[128]; //limits length of string
+   char tmp[32]; //limits length of string
+
+   // Move cursor to beginning of selected line
+   if (line == 0)
+      setDDRAMaddr(0x00);
+   else
+      setDDRAMaddr(0x40);
+
    va_list args;
    va_start(args, fmt);
-   vsnprintf(tmp, 128, fmt, args);
+   vsnprintf(tmp, 32, fmt, args);
    va_end(args);
-   Serial.print(tmp);
-*/
+
+   __writeString(tmp);
 }

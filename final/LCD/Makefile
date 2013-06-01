@@ -12,10 +12,13 @@ TARGET=lcdtest
 SRC=main.c lcd.c
 F_CPU=8000000UL
 
-CFLAGS=-mmcu=atmega2560 -Wall -std=gnu99 -O3 -DF_CPU=$(F_CPU)
-LFLAGS=-mmcu=atmega2560 -DF_CPU=$(F_CPU)
+#atmega2560
+
+CFLAGS=-mmcu=atmega328p -Wall -std=gnu99 -O3 -DF_CPU=$(F_CPU)
+LFLAGS=-mmcu=atmega328p -DF_CPU=$(F_CPU)
 OFLAGS=-j .text -j .data
-PRFLAGS=-c stk600 -p ATMEGA2560 -P usb -b 115200
+PRFLAGS=-c arduino -p ATMEGA328P -P /dev/ttyACM0 -b 115200
+#PRFLAGS=-c stk600 -p ATMEGA2560 -P usb -b 115200
 
 OBJS=$(SRC:.c=.o)
 
