@@ -12,10 +12,10 @@
 #define E_MASK    0x02
 
 #define LCD_CRTL_DDR    DDRB
-#define LCD_DAT_DDR     DDRD // PORT C for 600
+#define LCD_DAT_DDR     DDRC
 
 #define LCD_CTRL_PORT   PORTB
-#define LCD_DAT_PORT    PORTD // PORT C for 600
+#define LCD_DAT_PORT    PORTC
 
 #include <stdint.h>
 
