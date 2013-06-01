@@ -4,20 +4,28 @@
  * @author Daniel Jennings
  */
 
-
 #ifndef _LCD_H
 #define _LCD_H
 
+#include <stdint.h>
+
 #define RS_MASK   0x01
 #define E_MASK    0x02
+#define R_MASK    0x04
+#define G_MASK    0x08
+#define B_MASK    0x10
 
-#define LCD_CRTL_DDR    DDRB
+#define LCD_CRTL_DDR    DDRA
 #define LCD_DAT_DDR     DDRC
 
-#define LCD_CTRL_PORT   PORTB
+#define LCD_CTRL_PORT   PORTA
 #define LCD_DAT_PORT    PORTC
 
-#include <stdint.h>
+#define RED   0
+#define GREEN 1
+#define BLUE  2
+
+static volatile uint8_t RGB[3];
 
 /*
  * @brief sets up the interface to LCD, and enters initial commands
@@ -98,5 +106,14 @@ void writeRAM(uint8_t data);
  * @param ... variadic arguments containing values for format string
  */
 void lcdprintf(uint8_t line, const char *fmt, ...);
+
+/*
+ * @brief changes the color of the LCD to the 8-bit RGB value given.
+ *
+ * @param red the amount of red (8bit). 0 = none, 255 = all.
+ * @param green the amount of green (8bit). 0 = none, 255 = all.
+ * @param blue the amount of blue (8bit). 0 = none, 255 = all.
+ */
+void lcd_setColor(uint8_t red, uint8_t green, uint8_t blue);
 
 #endif

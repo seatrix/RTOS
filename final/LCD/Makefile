@@ -12,7 +12,7 @@ TARGET=lcdtest
 SRC=main.c lcd.c
 F_CPU=8000000UL
 
-CFLAGS=-mmcu=atmega2560 -Wall -std=gnu99 -O3 -DF_CPU=$(F_CPU)
+CFLAGS=-mmcu=atmega2560 -Wall -std=gnu99  -DF_CPU=$(F_CPU)
 LFLAGS=-mmcu=atmega2560 -DF_CPU=$(F_CPU)
 OFLAGS=-j .text -j .data
 PRFLAGS=-c stk600 -p ATMEGA2560 -P usb -b 115200

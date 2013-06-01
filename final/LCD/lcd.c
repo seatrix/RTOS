@@ -5,11 +5,20 @@
  */
 
 #include <avr/io.h>
+#include <avr/interrupt.h>
 #include <util/delay.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdarg.h>
 #include "lcd.h"
+
+static void __setupTimer0()
+{
+   TCCR0A = 0xC2; //set timer0 to CTC mode, sets OC0A on compare match
+   TCCR0B = 0x04; //set prescaler to divide by 256 (frequency at 31250Hz)
+   OCR0A  = 0x1; //output compare match register set frequency to 15625Hz
+   TIMSK0 = 0x02; //enables interrupt on compare match A
+}
 
 void __writeLCD(uint8_t data)
 {
@@ -35,6 +44,8 @@ void setupLCD()
 {
    LCD_CRTL_DDR |= 0x03;
    LCD_DAT_DDR |= 0xFF;
+   LCD_CRTL_DDR |= R_MASK | G_MASK | B_MASK;
+   LCD_CTRL_PORT |= R_MASK | G_MASK | B_MASK;
 
    //set RW and RS and E to 0
    LCD_CTRL_PORT &= ~RS_MASK; 
@@ -47,6 +58,13 @@ void setupLCD()
    entryModeSet(1,0);
    clearDisplay();
    displayOnOff(1,1,1);
+
+   // Initialize screen color ISR
+   RGB[RED] = 100;
+   RGB[GREEN] = 0;
+   RGB[BLUE] = 255;
+   __setupTimer0();
+   sei();
 }
 
 /*
@@ -245,4 +263,16 @@ void lcdprintf(uint8_t line, const char *fmt, ...)
    va_end(args);
 
    __writeString(tmp);
+}
+
+/*
+ * @brief changes the color of the LCD to the 8-bit RGB value given.
+ *
+ * @param red the amount of red (8bit). 0 = none, 255 = all.
+ * @param green the amount of green (8bit). 0 = none, 255 = all.
+ * @param blue the amount of blue (8bit). 0 = none, 255 = all.
+ */
+void lcd_setColor(uint8_t red, uint8_t green, uint8_t blue)
+{
+   // TODO
 }
