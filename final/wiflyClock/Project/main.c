@@ -7,15 +7,51 @@
 #include "task.h"
 #include "lcd.h"
 
-// Clockstate
-static xSemaphoreHandle clockStateSem; // State semaphore
-uint32_t sec;  // Value in seconds since epoch (Jan 1 1970)
-uint8_t on;    // 1 == on, 0 == off
+struct Time {
+   uint16_t year;
+   uint8_t month;
+   uint8_t day;
+   uint8_t hour;
+   uint8_t min;
+   uint8_t sec;
+};
+
+struct ClockState {
+   struct Time time;
+   uint8_t on;
+};
+
+static xSemaphoreHandle clockStateSem;
+struct ClockState clockState;
 
 // Test variables
 static unsigned char red = 255;
 static unsigned char green = 0;
 static unsigned char blue = 0;
+
+static void updateClock()
+{
+   while (clockState.time.sec > 59) {
+      clockState.time.sec = 0;
+      clockState.time.min++;
+   }
+   while (clockState.time.min > 59) {
+      clockState.time.min = 0;
+      clockState.time.hour++;
+   }
+   while (clockState.time.hour > 23) {
+      clockState.time.hour = 0;
+      clockState.time.day++;
+   }
+   while (clockState.time.day > 30) { // TODO day per month LUT
+      clockState.time.day = 1;
+      clockState.time.month++;
+   }
+   while (clockState.time.month > 12) {
+      clockState.time.month = 1;
+      clockState.time.year++;
+   }
+}
 
 void ColorTask(void *args)
 {
@@ -24,8 +60,6 @@ void ColorTask(void *args)
    unsigned char VB = 1;
 
    setupLCD();
-
-   lcdprintf(0, "Color test");
 
    while(1) {
       if (red == 255)
@@ -52,12 +86,41 @@ void ColorTask(void *args)
 
 void TextTask(void *args)
 {
+   char writebuff[2][17];
+
+   writebuff[0][10] = '\0';
+   writebuff[1][8] = '\0';
+   
    while(1) {
+
       xSemaphoreTake(clockStateSem, portMAX_DELAY);
-      lcdprintf(0, "%i", sec); // TODO problem with variadic arguments
+
+      // Manually build large time string
+      writebuff[0][0] = clockState.time.year/1000 + '0';
+      writebuff[0][1] = (clockState.time.year/100)%10 + '0';
+      writebuff[0][2] = (clockState.time.year/10)%10 + '0';
+      writebuff[0][3] = (clockState.time.year)%10 + '0';
+      writebuff[0][4] = '-';
+      writebuff[0][5] = clockState.time.month/10 + '0';
+      writebuff[0][6] = clockState.time.month%10 + '0';
+      writebuff[0][7] = '-';
+      writebuff[0][8] = clockState.time.day/10 + '0';
+      writebuff[0][9] = clockState.time.day%10 + '0';
+
+      // Manually build small time string
+      writebuff[1][0] = clockState.time.hour/10 + '0';
+      writebuff[1][1] = clockState.time.hour%10 + '0';
+      writebuff[1][2] = ':';
+      writebuff[1][3] = clockState.time.min/10 + '0';
+      writebuff[1][4] = clockState.time.min%10 + '0';
+      writebuff[1][5] = ':';
+      writebuff[1][6] = clockState.time.sec/10 + '0';
+      writebuff[1][7] = clockState.time.sec%10 + '0';
+
       xSemaphoreGive(clockStateSem);
 
-      lcdprintf(1, " R%03i G%03i B%03i", red, green, blue);
+      lcdprint(0, writebuff[0]);
+      lcdprint(1, writebuff[1]);
 
       vTaskDelay(200 / portTICK_RATE_MS);
    }
@@ -70,7 +133,8 @@ void ClockTask(void *args)
 
    while(1) {
       xSemaphoreTake(clockStateSem, portMAX_DELAY);
-      sec += 1;
+      clockState.time.sec += 1;
+      updateClock();
       xSemaphoreGive(clockStateSem);
 
       vTaskDelayUntil(&lastWakeTime, 1000 / portTICK_RATE_MS);
@@ -79,9 +143,14 @@ void ClockTask(void *args)
 
 int main(void)
 {
-   sec = 2;
-   msec = 1;
-   on = 1;
+   // Initialize time to 1970 epoch
+   clockState.time.year = 1970;
+   clockState.time.month = 1;
+   clockState.time.day = 1;
+   clockState.time.hour = 0;
+   clockState.time.min = 0;
+   clockState.time.sec = 0;
+   clockState.on = 1;
 
    vSemaphoreCreateBinary(clockStateSem);
 

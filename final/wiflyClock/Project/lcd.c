@@ -283,17 +283,15 @@ void writeRAM(uint8_t data)
 }
 
 /*
- * @brief lcd printf function. Prints a variadic format string to LCD.
+ * @brief lcd printf function. Prints a string string to LCD.
  *
  * @param line 0 to write on first line, 1 to write on second line
- * @param fmt a format string similar to printf's format string
- * @param ... variadic arguments containing values for format string
+ * @param fmt a string
  */
-void lcdprintf(uint8_t line, const char *fmt, ...)
+void lcdprint(uint8_t line, char *string)
 {
    static char blank[17] = {' ',' ',' ',' ',' ',' ',' ',' ',' ',
                                 ' ',' ',' ',' ',' ',' ',' ','\0'};
-   char tmp[17];
 
    // Move cursor to beginning of selected line
    if (line == 0)
@@ -301,17 +299,11 @@ void lcdprintf(uint8_t line, const char *fmt, ...)
    else
       setDDRAMaddr(0x40);
 
-   va_list args;
-   va_start(args, fmt);
-   vsnprintf(tmp, 17, fmt, args);
-   va_end(args);
-   tmp[16] = '\0';
-
    // Write the formated string
-   __writeString(tmp, 17);
+   __writeString(string, 17);
 
    // Clear the rest of the line
-   __writeString(blank, 17 - strlen(tmp));
+   __writeString(blank, 17 - strlen(string));
 }
 
 /*

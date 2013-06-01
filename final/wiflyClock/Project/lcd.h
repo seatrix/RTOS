@@ -81,13 +81,12 @@ void setDDRAMaddr(uint8_t address);
 void writeRAM(uint8_t data);
 
 /*
- * @brief lcd printf function. Prints a variadic format string to LCD.
+ * @brief lcd printf function. Prints a string string to LCD.
  *
  * @param line 0 to write on first line, 1 to write on second line
- * @param fmt a format string similar to printf's format string
- * @param ... variadic arguments containing values for format string
+ * @param fmt a string
  */
-void lcdprintf(uint8_t line, const char *fmt, ...);
+void lcdprint(uint8_t line, char *string);
 
 /*
  * @brief changes the color of the LCD to the 8-bit RGB value given.
