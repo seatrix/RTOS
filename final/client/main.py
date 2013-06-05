@@ -39,6 +39,28 @@ if len(sys.argv) > 1:
       else:
          print "Insufficient arguments"
 
+   # Write line
+   elif sys.argv[1] == 'Write':
+      if len(sys.argv) == 4:
+         osock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+         CONSTR = "WRT" + sys.argv[2] + sys.argv[3]
+         print CONSTR
+         osock.sendto(CONSTR, (listip, 2000))
+         osock.close();
+      else:
+         print "Insufficient arguments"
+
+   # Clear Screen
+   elif sys.argv[1] == 'Clear':
+      if len(sys.argv) == 2:
+         osock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+         CONSTR = "CLR"
+         print CONSTR
+         osock.sendto(CONSTR, (listip, 2000))
+         osock.close();
+      else:
+         print "Insufficient arguments"
+
    else:
       print "Unkown command!"
 
