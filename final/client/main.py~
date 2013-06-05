@@ -17,7 +17,7 @@ if len(sys.argv) > 1:
    print "ip:   ", listip
    print "port: ", port
 
-   # Change screen color (TRY SENDING 0ACED0)
+   # Change screen color
    if sys.argv[1] == 'Color':
       if len(sys.argv) == 3:
          osock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
