@@ -310,11 +310,9 @@ int wifly_receive(struct wifly *wf, char *dst, uint16_t bytes)
 
 void wifly_flush(struct wifly *wf)
 {
-   if (!wf->rxtx_enabled) {
+   if (!wf->rxtx_enabled)
       vTaskDelay(RX_DELAY / portTICK_RATE_MS);
-      return -1;
-   }
-
+ 
    xSemaphoreTake(uartSem, portMAX_DELAY);
    flushSerial(WF_USART);
    xSemaphoreGive(uartSem);

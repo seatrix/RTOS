@@ -29,6 +29,8 @@ C_SRCS =  \
    queue.c \
    tasks.c \
    timers.c \
+   serial.c \
+   wifly.c \
    lcd.c
 
 OBJS=$(C_SRCS:.c=.o)
