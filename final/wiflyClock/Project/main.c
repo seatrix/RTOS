@@ -23,7 +23,10 @@ struct Time {
 
 struct ClockState {
    struct Time time;
-   uint8_t on;
+   uint8_t on;       // Is the display on?
+   uint8_t write0;   // Are we writing to line 0?
+   uint8_t write1;   // Are we writing to line 1?
+   char writebuff[2][17];
 };
 
 static uint8_t daysInMonth[13] = {255, 31,255,31,30,31,30,31,31,30,31,30,31};
@@ -132,49 +135,53 @@ void ColorTask(void *args)
 
 void TextTask(void *args)
 {
-   char writebuff[2][17];
-
    setupLCD();
    
-   while(1) {
+   while (1) {
 
       xSemaphoreTake(clockStateSem, portMAX_DELAY);
 
       if (clockState.on) {
 
          // Manually build large time string
-         writebuff[0][0] = clockState.time.year/1000 + '0';
-         writebuff[0][1] = (clockState.time.year/100)%10 + '0';
-         writebuff[0][2] = (clockState.time.year/10)%10 + '0';
-         writebuff[0][3] = (clockState.time.year)%10 + '0';
-         writebuff[0][4] = '-';
-         writebuff[0][5] = clockState.time.month/10 + '0';
-         writebuff[0][6] = clockState.time.month%10 + '0';
-         writebuff[0][7] = '-';
-         writebuff[0][8] = clockState.time.day/10 + '0';
-         writebuff[0][9] = clockState.time.day%10 + '0';
+         if (clockState.write0 == 0) {
+            clockState.writebuff[0][0] = clockState.time.year/1000 + '0';
+            clockState.writebuff[0][1] = (clockState.time.year/100)%10 + '0';
+            clockState.writebuff[0][2] = (clockState.time.year/10)%10 + '0';
+            clockState.writebuff[0][3] = (clockState.time.year)%10 + '0';
+            clockState.writebuff[0][4] = '-';
+            clockState.writebuff[0][5] = clockState.time.month/10 + '0';
+            clockState.writebuff[0][6] = clockState.time.month%10 + '0';
+            clockState.writebuff[0][7] = '-';
+            clockState.writebuff[0][8] = clockState.time.day/10 + '0';
+            clockState.writebuff[0][9] = clockState.time.day%10 + '0';
+         }
 
          // Manually build small time string
-         writebuff[1][0] = clockState.time.hour/10 + '0';
-         writebuff[1][1] = clockState.time.hour%10 + '0';
-         writebuff[1][2] = ':';
-         writebuff[1][3] = clockState.time.min/10 + '0';
-         writebuff[1][4] = clockState.time.min%10 + '0';
-         writebuff[1][5] = ':';
-         writebuff[1][6] = clockState.time.sec/10 + '0';
-         writebuff[1][7] = clockState.time.sec%10 + '0';
+         if (clockState.write1 == 0) {
+            clockState.writebuff[1][0] = clockState.time.hour/10 + '0';
+            clockState.writebuff[1][1] = clockState.time.hour%10 + '0';
+            clockState.writebuff[1][2] = ':';
+            clockState.writebuff[1][3] = clockState.time.min/10 + '0';
+            clockState.writebuff[1][4] = clockState.time.min%10 + '0';
+            clockState.writebuff[1][5] = ':';
+            clockState.writebuff[1][6] = clockState.time.sec/10 + '0';
+            clockState.writebuff[1][7] = clockState.time.sec%10 + '0';
+            clockState.writebuff[1][8] = '\0';
+         }
 
-         writebuff[0][10] = '\0';
-         writebuff[1][8] = '\0';
+         clockState.writebuff[0][10] = '\0';
+         clockState.writebuff[1][9] = '\0';
+
       } else {
-         writebuff[0][0] = '\0';
-         writebuff[1][0] = '\0';
+         clockState.writebuff[0][0] = '\0';
+         clockState.writebuff[1][0] = '\0';
       }
 
       xSemaphoreGive(clockStateSem);
 
-      lcdprint(0, writebuff[0]);
-      lcdprint(1, writebuff[1]);
+      lcdprint(0, clockState.writebuff[0]);
+      lcdprint(1, clockState.writebuff[1]);
 
       vTaskDelay(200 / portTICK_RATE_MS);
    }
@@ -219,10 +226,7 @@ void ReceiveTask(void *args)
 
       // Receive command type bytes
       if (3 == (cnt = wifly_receive(&wf, buff, 3))) {
-//         writeBytes(">>>", 3, USART0);
-//         writeBytes(buff, 3, USART0);
-//         writeBytes("\r\n", 2, USART0);
-         
+
          // Color change command
          if (!strncmp(buff, "COL", 3)) {
             if (6 == (cnt = wifly_receive(&wf, buff, 6))) {
@@ -250,16 +254,47 @@ void ReceiveTask(void *args)
          // Toggle display command
          } else if (!strncmp(buff, "TOG", 3)) {
             writeBytes("$TOGGLE\r\n", 9, USART0);
-            xSemaphoreTake(clockStateSem, portMAX_DELAY);
             if (clockState.on) {
                lcd_setColorRGB(0, 0, 0);
                lcdprint(0, "");
                lcdprint(1, "");
+               xSemaphoreTake(clockStateSem, portMAX_DELAY);
                clockState.on = 0;
+               xSemaphoreGive(clockStateSem);
             } else {
                lcd_setColorRGB(255, 255, 255);
+               xSemaphoreTake(clockStateSem, portMAX_DELAY);
                clockState.on = 1;
+               xSemaphoreGive(clockStateSem);
             }
+
+         // Write display command
+         } else if (!strncmp(buff, "WRT", 3)) {
+            if (3 == (cnt = wifly_receive(&wf, buff, 3))) {
+               writeBytes("$WRITE\r\n", 8, USART0);
+               uint8_t line = ctoi(buff[0]);
+               uint8_t bytes = atoi8(&buff[1]);
+               if (bytes == (cnt = wifly_receive(&wf, buff, bytes))) {
+                  writeBytes(buff, bytes, USART0);
+                  buff[bytes] = '\0';
+                  xSemaphoreTake(clockStateSem, portMAX_DELAY);
+                  if (line == 0) {
+                     strncpy(clockState.writebuff[line], buff, 17);
+                     clockState.write0 = 1;
+                  } else if (line == 1) {
+                     strncpy(clockState.writebuff[line], buff, 17);
+                     clockState.write1 = 1;
+                  }
+                  xSemaphoreGive(clockStateSem);
+               }
+            }
+
+         // Clear display command
+         } else if (!strncmp(buff, "CLR", 3)) {
+            writeBytes("$CLEAR\r\n", 8, USART0);
+            xSemaphoreTake(clockStateSem, portMAX_DELAY);
+            clockState.write0 = 0;
+            clockState.write1 = 0;
             xSemaphoreGive(clockStateSem);
          }
       }
@@ -283,6 +318,8 @@ int main(void)
    clockState.time.min = 0;
    clockState.time.sec = 0;
    clockState.on = 1;
+   clockState.write0 = 0;
+   clockState.write1 = 0;
 
    vSemaphoreCreateBinary(clockStateSem);
 
@@ -292,7 +329,7 @@ int main(void)
 
    xTaskCreate(UARTTask, (cscp) "uart", 100, NULL, 1, NULL);
    xTaskCreate(WiflyTask, (cscp) "wifly", 100, NULL, 2, NULL);
-   xTaskCreate(ReceiveTask, (cscp) "receive", 200, NULL, 3, NULL);
+   xTaskCreate(ReceiveTask, (cscp) "receive", 300, NULL, 3, NULL);
 
    vTaskStartScheduler();
 
