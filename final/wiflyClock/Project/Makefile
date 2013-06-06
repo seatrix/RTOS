@@ -23,7 +23,7 @@ HEXFLAGS=-O ihex -R .eeprom -R .fuse -R .lock -R .signature
 C_SRCS =  \
    $(PROJNAME).c \
    croutine.c \
-   heap_1.c \
+   heap_2.c \
    list.c \
    port.c \
    queue.c \
