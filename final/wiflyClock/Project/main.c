@@ -340,7 +340,7 @@ void ColorTask(void *args)
          lcd_setColorRGB(red, green, blue);
       }
 
-      vTaskDelay(20 / portTICK_RATE_MS);
+      vTaskDelay(10 / portTICK_RATE_MS);
    }
 }
 
@@ -482,15 +482,15 @@ void ReceiveTask(void *args)
          } else if (!strncmp(buff, "TIM", 3)) {
             if (14 == (cnt = wifly_receive(&wf, buff, 14))) {
                writeBytes("$TIM", 4, USART0);
-               writeBytes(buff, 13, USART0);
+               writeBytes(buff, 14, USART0);
                writeBytes("\r\n", 2, USART0);
 
                uint16_t year = atoiD16(&buff[0]);
-               uint8_t month = atoiX8(&buff[4]);
-               uint8_t day = atoiX8(&buff[6]);
-               uint8_t hour = atoiX8(&buff[8]);
-               uint8_t min = atoiX8(&buff[10]);
-               uint8_t second = atoiX8(&buff[12]);
+               uint8_t month = atoiD8(&buff[4]);
+               uint8_t day = atoiD8(&buff[6]);
+               uint8_t hour = atoiD8(&buff[8]);
+               uint8_t min = atoiD8(&buff[10]);
+               uint8_t second = atoiD8(&buff[12]);
 
                setTime(year, month, day, hour, min, second);
             }
@@ -515,19 +515,6 @@ void ReceiveTask(void *args)
                if (bytes == (cnt = wifly_receive(&wf, buff, bytes)))
                   addEvent(&time, type, buff, line, bytes);
             }
-
-         // XXX TEST
-         } else if (!strncmp(buff, "TS1", 3)) {
-            writeBytes("$TESTY\r\n", 8, USART0);
-            struct Time t1;
-            t1.sec = 23;
-            t1.min = 0;
-            t1.hour = 0;
-            t1.day = 1;
-            t1.month = 1;
-            t1.year = 1970;
-            char color[6] = "FF0000";
-            addEvent(&t1, EVENT_COLOR, color, 0, 6);
          }
       }
 
@@ -549,15 +536,15 @@ int main(void)
    clockState.time.hour = 0;
    clockState.time.min = 0;
    clockState.time.sec = 0;
-   clockState.on = 1;
+   clockState.on = 2;
    clockState.write0 = 0;
    clockState.write1 = 0;
 
    vSemaphoreCreateBinary(clockStateSem);
 
-   xTaskCreate(ClockTask, (cscp) "clock", 1000, NULL, 6, NULL);
-   xTaskCreate(TextTask, (cscp) "text", 1000, NULL, 5, NULL);
-   //xTaskCreate(ColorTask, (cscp) "color", 1000, NULL, 4, NULL);
+   xTaskCreate(ClockTask, (cscp) "clock", 100, NULL, 6, NULL);
+   xTaskCreate(TextTask, (cscp) "text", 200, NULL, 5, NULL);
+   xTaskCreate(ColorTask, (cscp) "color", 1000, NULL, 4, NULL);
    xTaskCreate(ReceiveTask, (cscp) "receive", 400, NULL, 3, NULL);
    xTaskCreate(WiflyTask, (cscp) "wifly", 100, NULL, 2, NULL);
    xTaskCreate(UARTTask, (cscp) "uart", 100, NULL, 1, NULL);
